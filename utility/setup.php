@@ -1,8 +1,8 @@
 <?php
 // Database server connection (without DB name yet)
 $host = "localhost";
-$user = "redhoddie";
-$pass = "redhoddie_mysql";
+$user = "root";
+$pass = "";
 
 // Create PDO connection to server
 try {
