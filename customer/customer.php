@@ -1,8 +1,8 @@
 <?php
 // Database connection
 $host = "localhost";
-$user = "root";
-$pass = "";
+$user = "redhoddie";
+$pass = "redhoddie_mysql";
 $dbname = "POS";
 
 try {
