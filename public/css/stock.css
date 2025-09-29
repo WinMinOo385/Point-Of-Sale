@@ -1,0 +1,38 @@
+.stock-app { padding: 2rem; }
+.stock-container { display: grid; grid-template-columns: minmax(600px, 2fr) minmax(380px, 1fr); gap: 2rem; align-items: start; }
+@media (max-width: 900px) { .stock-container { grid-template-columns: 1fr; } }
+
+.stock-toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.stock-actions { display: flex; gap: 8px; align-items: center; }
+.primary-btn, .secondary-btn, .danger-btn, .icon-btn, .link-btn { cursor: pointer; border: none; border-radius: 8px; padding: 0.75rem 1rem; font-weight: 600; }
+.primary-btn { background: #A3C4F3; color: #fff; }
+.secondary-btn { background: #E6EBE0; color: #333; }
+.danger-btn { background: #e74c3c; color: #fff; }
+.icon-btn { background: #E6EBE0; padding: 6px 10px; }
+.link-btn { background: transparent; color: #2c3e50; text-decoration: underline; padding: 0; }
+
+.table-wrapper { border: 1px solid #E6EBE0; border-radius: 8px; overflow: auto; max-height: 70vh; }
+.products-table { width: 100%; border-collapse: collapse; background: #fff; }
+.products-table th, .products-table td { padding: 10px; border-bottom: 1px solid #E6EBE0; }
+.products-table thead th { position: sticky; top: 0; background: #f8f9fa; z-index: 1; }
+.products-table .num { text-align: right; }
+
+.qty-inline { display: inline-flex; align-items: center; gap: 6px; }
+
+.stock-form-panel { border: 1px solid #E6EBE0; border-radius: 12px; padding: 2rem; position: sticky; top: 16px; background: #f8f9fa; }
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 900px) { .form-row { grid-template-columns: 1fr; } }
+.qty-quick { display: flex; gap: 6px; margin-top: 6px; }
+.field-error { color: #e74c3c; font-size: 12px; min-height: 16px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+.modal[hidden] { display: none !important; }
+.modal { position: fixed; inset: 0; display: grid; place-items: center; z-index: 1000; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.4); }
+.modal-dialog { position: relative; background: #fff; width: min(600px, 92vw); border-radius: 10px; overflow: hidden; }
+.modal-header, .modal-footer { padding: 10px 14px; border-bottom: 1px solid #E6EBE0; }
+.modal-footer { border-top: 1px solid #E6EBE0; border-bottom: none; display: flex; gap: 8px; justify-content: flex-end; }
+.modal-body { padding: 14px; }
+
+
