@@ -372,6 +372,9 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <a href="../sale/sale.php" class="nav-link">
                     🛒 Sales
                 </a>
+                <a href="../reporting/reporting.php" class="nav-link">
+                    📊 Reporting
+                </a>
             </div>
         </div>
 

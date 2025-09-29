@@ -181,6 +181,10 @@ declare(strict_types=1);
 					<span class="btn-icon">🛒</span>
 					<span class="btn-text">Sales Management</span>
 				</a>
+				<a class="btn" href="reporting/reporting.php">
+					<span class="btn-icon">📊</span>
+					<span class="btn-text">Reporting</span>
+				</a>
 			</nav>
 			
 			<div class="setup-section">

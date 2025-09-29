@@ -402,6 +402,9 @@ $sales_history = $sales_history_stmt->fetchAll(PDO::FETCH_ASSOC);
                 <a href="sale.php" class="nav-link active">
                     🛒 Sales History
                 </a>
+                <a href="../reporting/reporting.php" class="nav-link">
+                    📊 Reporting
+                </a>
             </div>
         </div>
 
