@@ -111,7 +111,6 @@ let selectedCustomerId = null;
 document.getElementById('searchInput').addEventListener('input', function (e) {
     const searchTerm = e.target.value.toLowerCase();
     const productCards = document.querySelectorAll('.product-card');
-
     productCards.forEach(card => {
         const productName = card.dataset.name.toLowerCase();
         if (productName.includes(searchTerm)) {
@@ -191,7 +190,6 @@ function showAddToCartAnimation(pid) {
 
     button.innerHTML = '<i class="fas fa-check"></i> Added!';
     button.style.backgroundColor = '#28a745';
-
     setTimeout(() => {
         button.innerHTML = originalText;
         button.style.backgroundColor = '#85a0c7';
@@ -201,7 +199,6 @@ function showAddToCartAnimation(pid) {
 // Update cart display
 function updateCartDisplay() {
     const cartItemsContainer = document.getElementById('cartItems');
-
     if (cart.length === 0) {
         cartItemsContainer.innerHTML = `
             <div class="empty-cart">
@@ -237,7 +234,6 @@ function updateCartQuantity(pid, change) {
 
     if (item) {
         const newQuantity = item.quantity + change;
-
         if (newQuantity <= 0) {
             removeFromCart(pid);
         } else if (newQuantity <= item.stock) {
@@ -299,6 +295,7 @@ function checkout() {
         return;
     }
 
+
     // Here you would typically send the cart data to your server
     // For now, we'll just show a confirmation
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -312,7 +309,6 @@ function checkout() {
     const cartSummary = cart.map(item =>
         `${item.name} x${item.quantity} = $${(item.price * item.quantity).toFixed(2)}`
     ).join('\n');
-
     const confirmation = `
 Checkout Summary:
 ${cartSummary}
@@ -372,7 +368,6 @@ Proceed with checkout?
                 checkoutBtn.innerHTML = '<i class="fas fa-credit-card"></i> Checkout';
             });
     }
-
 
 // Update product stock and button state
 function updateProductStock(pid, newStock) {
