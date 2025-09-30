@@ -71,7 +71,7 @@ body {
     transform: translateY(-2px);
 }
 
-.nav-user {
+.nav-customer {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -79,8 +79,38 @@ body {
     font-weight: 500;
 }
 
-.nav-user i {
+.nav-customer i {
     font-size: 1.2rem;
+}
+
+.nav-customer label {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.nav-customer select {
+    background-color: rgba(230, 235, 224, 0.2);
+    border: 2px solid rgba(230, 235, 224, 0.3);
+    border-radius: 8px;
+    color: #E6EBE0;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-width: 150px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-customer select:focus {
+    outline: none;
+    border-color: #E6EBE0;
+    background-color: rgba(230, 235, 224, 0.3);
+}
+
+.nav-customer select option {
+    background-color: #A3C4F3;
+    color: #2c3e50;
+    padding: 0.5rem;
 }
 
 /* Main Container */

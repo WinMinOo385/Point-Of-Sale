@@ -1,6 +1,14 @@
 <?php
 // Get current page for active navigation highlighting
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
+
+// Get customers for selection dropdown
+if (isset($pdo)) {
+    $stmt = $pdo->query("SELECT cid, name FROM customers ORDER BY name");
+    $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $customers = [];
+}
 ?>
 <!-- Navigation Bar -->
 <nav class="navbar">
@@ -27,9 +35,15 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
                 Reports
             </a>
         </div>
-        <div class="nav-user">
-            <i class="fas fa-user-circle"></i>
-            <span>Admin</span>
+        <div class="nav-customer">
+            <i class="fas fa-user"></i>
+            <label for="customerSelect">Customer:</label>
+            <select id="customerSelect" name="customer_id" onchange="updateSelectedCustomer(this.value)">
+                <option value="">Select Customer</option>
+                <?php foreach ($customers as $customer): ?>
+                    <option value="<?= $customer['cid'] ?>"><?= htmlspecialchars($customer['name']) ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
     </div>
 </nav>
