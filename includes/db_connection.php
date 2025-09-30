@@ -1,8 +1,8 @@
 <?php
 // Database connection configuration
 $host = "localhost";
-$user = "redhoddie";
-$pass = "redhoddie_mysql";
+$user = "root";
+$pass = "";
 $dbName = "POS";
 
 try {
@@ -13,4 +13,3 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 ?>
-

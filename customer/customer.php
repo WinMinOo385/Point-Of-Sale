@@ -1,17 +1,6 @@
 <?php
 // Database connection
-$host = "localhost";
-$user = "redhoddie";
-$pass = "redhoddie_mysql";
-$dbname = "POS";
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
+include '../includes/db_connection.php';
 
 // Handle form submissions
 $message = "";
@@ -105,6 +94,48 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             margin-bottom: 30px;
             text-align: center;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .navigation {
+            background-color: #A3C4F3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            background-color: #85a0c7;
+            color: #E6EBE0;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-link:hover {
+            background-color: #6d8bb3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-link.active {
+            background-color: #4CAF50;
+        }
+
+        .nav-link.active:hover {
+            background-color: #45a049;
         }
 
         .header h1 {
@@ -317,6 +348,20 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="header">
             <h1>Customer Management</h1>
             <p>Manage your customer list</p>
+        </div>
+
+        <div class="navigation">
+            <div class="nav-links">
+                <a href="../index.php" class="nav-link">
+                    🏠 Home
+                </a>
+                <a href="customer.php" class="nav-link active">
+                    👥 Customers
+                </a>
+                <a href="../sale/sale.php" class="nav-link">
+                    🛒 Sales
+                </a>
+            </div>
         </div>
 
         <?php if ($message): ?>
