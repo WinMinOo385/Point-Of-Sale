@@ -1,6 +1,22 @@
 <?php
-// Get current page for active navigation highlighting
-$currentPage = basename($_SERVER['PHP_SELF'], '.php');
+// Determine base path for links if not set by the page
+$basePath = isset($basePath) ? $basePath : '';
+
+// Determine active section based on the current script path
+$script = $_SERVER['SCRIPT_NAME'];
+if (strpos($script, '/sale/') !== false) {
+    $active = 'sale';
+} elseif (strpos($script, '/customer/') !== false) {
+    $active = 'customer';
+} elseif (strpos($script, '/reporting/') !== false) {
+    $active = 'reporting';
+} elseif (strpos($script, '/stock/') !== false || strpos($script, 'stock.php') !== false) {
+    $active = 'stock';
+} elseif (strpos($script, 'index.php') !== false) {
+    $active = 'index';
+} else {
+    $active = 'index';
+}
 
 // Get customers for selection dropdown
 if (isset($pdo)) {
@@ -13,28 +29,29 @@ if (isset($pdo)) {
 <!-- Navigation Bar -->
 <nav class="navbar">
     <div class="nav-container">
-        <div class="nav-brand">
+        <a href="<?= $basePath ?>index.php" class="nav-brand" style="text-decoration: none; color: inherit;">
             <i class="fas fa-cash-register"></i>
             <span>Point of Sale</span>
-        </div>
+        </a>
         <div class="nav-menu">
-            <a href="index.php" class="nav-link <?= ($currentPage == 'index') ? 'active' : '' ?>">
+            <a href="<?= $basePath ?>stock/stock.php" class="nav-link <?= ($active == 'stock') ? 'active' : '' ?>">
                 <i class="fas fa-box"></i>
                 Products
             </a>
-            <a href="sales.php" class="nav-link <?= ($currentPage == 'sales') ? 'active' : '' ?>">
+            <a href="<?= $basePath ?>sale/sale.php" class="nav-link <?= ($active == 'sale') ? 'active' : '' ?>">
                 <i class="fas fa-shopping-cart"></i>
                 Sales
             </a>
-            <a href="customer/customer.php" class="nav-link <?= ($currentPage == 'customers') ? 'active' : '' ?>">
+            <a href="<?= $basePath ?>customer/customer.php" class="nav-link <?= ($active == 'customer') ? 'active' : '' ?>">
                 <i class="fas fa-users"></i>
                 Customers
             </a>
-            <a href="reports.php" class="nav-link <?= ($currentPage == 'reports') ? 'active' : '' ?>">
+            <a href="<?= $basePath ?>reporting/reporting.php" class="nav-link <?= ($active == 'reporting') ? 'active' : '' ?>">
                 <i class="fas fa-chart-bar"></i>
                 Reports
             </a>
         </div>
+        <?php if ($active == 'index'): ?>
         <div class="nav-customer">
             <i class="fas fa-user"></i>
             <label for="customerSelect">Customer:</label>
@@ -45,5 +62,6 @@ if (isset($pdo)) {
                 <?php endforeach; ?>
             </select>
         </div>
+        <?php endif; ?>
     </div>
 </nav>

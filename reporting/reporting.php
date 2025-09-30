@@ -1,17 +1,6 @@
 <?php
-// Database connection
-$host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "POS";
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
+// Database connection (reusable)
+include '../includes/db_connection.php';
 
 // Inputs (GET)
 $startDate = isset($_GET['start_date']) && $_GET['start_date'] !== '' ? $_GET['start_date'] : null;
@@ -81,48 +70,26 @@ $summary = $summaryStmt->fetch(PDO::FETCH_ASSOC) ?: [
     'avg_order' => 0
 ];
 ?>
+<?php
+$pageTitle = "Top Customers Report - POS System";
+$basePath = '../';
+include '../includes/header.php';
+?>
+<?php include '../includes/navbar.php'; ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top Customers Report - POS System</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+<style>
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #E6EBE0;
-            color: #E6EBE0;
-            line-height: 1.6;
-        }
-
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-
-        .header {
-            background-color: #A3C4F3;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .header h1 { color: #E6EBE0; font-size: 2.5rem; margin-bottom: 10px; }
-        .header p { color: #E6EBE0; font-size: 1.1rem; opacity: 0.9; }
-
-        .navigation {
-            background-color: #A3C4F3;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .nav-links { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-        .nav-link { background-color: #85a0c7; color: #E6EBE0; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: 600; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
-        .nav-link:hover { background-color: #6d8bb3; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
-        .nav-link.active { background-color: #4CAF50; }
-        .nav-link.active:hover { background-color: #45a049; }
+    .header {
+        background-color: #A3C4F3;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 { color: #E6EBE0; font-size: 2.5rem; margin-bottom: 10px; }
+    .header p { color: #E6EBE0; font-size: 1.1rem; opacity: 0.9; }
 
         .filters, .table-container, .stats-container {
             background-color: #A3C4F3;
@@ -157,35 +124,26 @@ $summary = $summaryStmt->fetch(PDO::FETCH_ASSOC) ?: [
 
         .badge { background-color: #85a0c7; color: #E6EBE0; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
 
-        @media (max-width: 768px) {
-            .container { padding: 10px; }
-            .header h1 { font-size: 2rem; }
-            .filters form { grid-template-columns: 1fr; }
-        }
-    </style>
-    <script>
-        function resetFilters() {
-            const url = new URL(window.location.href);
-            ['start_date','end_date','limit'].forEach(k => url.searchParams.delete(k));
-            window.location.href = url.toString();
-        }
-    </script>
-    </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Top Customers</h1>
-            <p>See which customers drive the most revenue</p>
-        </div>
+    @media (max-width: 768px) {
+        .container { padding: 10px; }
+        .header h1 { font-size: 2rem; }
+        .filters form { grid-template-columns: 1fr; }
+    }
+</style>
 
-        <div class="navigation">
-            <div class="nav-links">
-                <a href="../index.php" class="nav-link">🏠 Home</a>
-                <a href="../customer/customer.php" class="nav-link">👥 Customers</a>
-                <a href="../sale/sale.php" class="nav-link">🛒 Sales History</a>
-                <a href="reporting.php" class="nav-link active">📊 Reporting</a>
-            </div>
-        </div>
+<script>
+    function resetFilters() {
+        const url = new URL(window.location.href);
+        ['start_date','end_date','limit'].forEach(k => url.searchParams.delete(k));
+        window.location.href = url.toString();
+    }
+</script>
+
+<div class="container">
+    <div class="header">
+        <h1>Top Customers</h1>
+        <p>See which customers drive the most revenue</p>
+    </div>
 
         <div class="filters">
             <h2>Filters</h2>
@@ -273,9 +231,8 @@ $summary = $summaryStmt->fetch(PDO::FETCH_ASSOC) ?: [
                 </div>
             <?php endif; ?>
         </div>
-    </div>
+</div>
 
-</body>
-</html>
+<?php include '../includes/footer.php'; ?>
 
 

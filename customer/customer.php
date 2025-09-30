@@ -56,141 +56,57 @@ if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $editCustomer = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Fetch all customers
-$stmt = $pdo->query("SELECT * FROM customers ORDER BY created_at DESC");
+// Pagination (client-side search, so fetch all)
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$perPage = 7;
+$offset = ($page - 1) * $perPage;
+
+// Get total count
+$countStmt = $pdo->query("SELECT COUNT(*) FROM customers");
+$totalCustomers = $countStmt->fetchColumn();
+$totalPages = ceil($totalCustomers / $perPage);
+
+// Fetch customers with pagination
+$stmt = $pdo->prepare("SELECT * FROM customers ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+<?php
+$pageTitle = "Customer Management - POS System";
+$basePath = '../';
+include '../includes/header.php';
+?>
+<?php include '../includes/navbar.php'; ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Management - POS System</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #E6EBE0;
-            color: #E6EBE0;
-            line-height: 1.6;
-        }
+    .header {
+        background-color: #A3C4F3;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+    .header h1 {
+        color: #E6EBE0;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
 
-        .header {
-            background-color: #A3C4F3;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .navigation {
-            background-color: #A3C4F3;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .nav-link {
-            background-color: #85a0c7;
-            color: #E6EBE0;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-link:hover {
-            background-color: #6d8bb3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .nav-link.active {
-            background-color: #4CAF50;
-        }
-
-        .nav-link.active:hover {
-            background-color: #45a049;
-        }
-
-        .navigation {
-            background-color: #A3C4F3;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .nav-link {
-            background-color: #85a0c7;
-            color: #E6EBE0;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-link:hover {
-            background-color: #6d8bb3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .nav-link.active {
-            background-color: #4CAF50;
-        }
-
-        .nav-link.active:hover {
-            background-color: #45a049;
-        }
-
-        .header h1 {
-            color: #E6EBE0;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: #E6EBE0;
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
+    .header p {
+        color: #E6EBE0;
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
 
         .message {
             padding: 15px;
@@ -288,6 +204,37 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             background-color: #616161;
         }
 
+        .search-section {
+            background-color: #A3C4F3;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(163, 196, 243, 0.5);
+        }
+
         .table-container {
             background-color: #A3C4F3;
             padding: 30px;
@@ -358,6 +305,66 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             margin-top: 20px;
         }
 
+        .pagination-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .pagination-info {
+            color: #E6EBE0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .pagination-btn {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 40px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .pagination-btn:hover:not(.disabled) {
+            background-color: #85a0c7;
+            color: #E6EBE0;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .pagination-btn.active {
+            background-color: #85a0c7;
+            color: #E6EBE0;
+            font-weight: 600;
+        }
+
+        .pagination-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .pagination-ellipsis {
+            color: #E6EBE0;
+            padding: 0 5px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -379,49 +386,17 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 padding: 10px;
             }
             
-            .actions {
-                flex-direction: column;
-            }
+        .actions {
+            flex-direction: column;
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Customer Management</h1>
-            <p>Manage your customer list</p>
-        </div>
+    }
+</style>
 
-        <div class="navigation">
-            <div class="nav-links">
-                <a href="../index.php" class="nav-link">
-                    🏠 Home
-                </a>
-                <a href="customer.php" class="nav-link active">
-                    👥 Customers
-                </a>
-                <a href="../sale/sale.php" class="nav-link">
-                    🛒 Sales
-                </a>
-                <a href="../reporting/reporting.php" class="nav-link">
-                    📊 Reporting
-                </a>
-            </div>
-        </div>
-
-        <div class="navigation">
-            <div class="nav-links">
-                <a href="../index.php" class="nav-link">
-                    🏠 Home
-                </a>
-                <a href="customer.php" class="nav-link active">
-                    👥 Customers
-                </a>
-                <a href="../sale/sale.php" class="nav-link">
-                    🛒 Sales
-                </a>
-            </div>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1>Customer Management</h1>
+        <p>Manage Our customer list</p>
+    </div>
 
         <?php if ($message): ?>
             <div class="message <?php echo $messageType; ?>">
@@ -464,9 +439,16 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </form>
         </div>
 
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-form">
+                <input type="text" id="customerSearch" class="search-input" placeholder="🔍 Search customers by name, email, or phone..." onkeyup="filterCustomers()">
+            </div>
+        </div>
+
         <!-- Customer List -->
         <div class="table-container">
-            <h2>Customer List</h2>
+            <h2>Customer List<?php echo $search ? ' (Search Results)' : ''; ?></h2>
             <?php if (count($customers) > 0): ?>
                 <table>
                     <thead>
@@ -479,9 +461,9 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="customerTableBody">
                         <?php foreach ($customers as $customer): ?>
-                            <tr>
+                            <tr class="customer-row" data-name="<?php echo htmlspecialchars(strtolower($customer['name'])); ?>" data-email="<?php echo htmlspecialchars(strtolower($customer['email'] ?: '')); ?>" data-phone="<?php echo htmlspecialchars($customer['phone'] ?: ''); ?>">
                                 <td><?php echo $customer['cid']; ?></td>
                                 <td><?php echo htmlspecialchars($customer['name']); ?></td>
                                 <td><?php echo htmlspecialchars($customer['email'] ?: 'N/A'); ?></td>
@@ -506,10 +488,84 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <p>No customers found. Add your first customer using the form above.</p>
                 </div>
             <?php endif; ?>
+            <div id="noResults" class="no-customers" style="display: none;">
+                <p>No customers match your search.</p>
+            </div>
+
+            <!-- Pagination -->
+            <?php if ($totalPages > 1): ?>
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Page <?php echo $page; ?> of <?php echo $totalPages; ?> (<?php echo $totalCustomers; ?> customers)
+                    </div>
+                    <div class="pagination-buttons">
+                        <?php
+                        // Previous button
+                        if ($page > 1): ?>
+                            <a href="?page=<?php echo ($page - 1); ?>" class="pagination-btn">← Prev</a>
+                        <?php else: ?>
+                            <span class="pagination-btn disabled">← Prev</span>
+                        <?php endif; ?>
+
+                        <?php
+                        // Page numbers
+                        for ($i = 1; $i <= $totalPages; $i++):
+                            if ($i == 1 || $i == $totalPages || ($i >= $page - 2 && $i <= $page + 2)):
+                                $activeClass = ($i == $page) ? 'active' : '';
+                                ?>
+                                <a href="?page=<?php echo $i; ?>" class="pagination-btn <?php echo $activeClass; ?>"><?php echo $i; ?></a>
+                            <?php elseif ($i == $page - 3 || $i == $page + 3): ?>
+                                <span class="pagination-ellipsis">...</span>
+                            <?php endif;
+                        endfor;
+                        ?>
+
+                        <?php
+                        // Next button
+                        if ($page < $totalPages): ?>
+                            <a href="?page=<?php echo ($page + 1); ?>" class="pagination-btn">Next →</a>
+                        <?php else: ?>
+                            <span class="pagination-btn disabled">Next →</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
     <script>
+        // Client-side search filter
+        function filterCustomers() {
+            const searchInput = document.getElementById('customerSearch');
+            const filter = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('.customer-row');
+            const noResults = document.getElementById('noResults');
+            const table = document.querySelector('table');
+            let visibleCount = 0;
+
+            rows.forEach(function(row) {
+                const name = row.getAttribute('data-name') || '';
+                const email = row.getAttribute('data-email') || '';
+                const phone = row.getAttribute('data-phone') || '';
+                
+                if (name.includes(filter) || email.includes(filter) || phone.includes(filter)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            if (visibleCount === 0 && filter !== '') {
+                if (table) table.style.display = 'none';
+                noResults.style.display = 'block';
+            } else {
+                if (table) table.style.display = '';
+                noResults.style.display = 'none';
+            }
+        }
+
         // Add some interactivity
         document.addEventListener('DOMContentLoaded', function() {
             // Auto-hide messages after 5 seconds
@@ -538,5 +594,6 @@ $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
         });
     </script>
-</body>
-</html>
+</div>
+
+<?php include '../includes/footer.php'; ?>

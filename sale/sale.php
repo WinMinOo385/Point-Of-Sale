@@ -1,17 +1,6 @@
 <?php
-// Database connection
-$host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "POS";
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
+// Database connection (reusable)
+include '../includes/db_connection.php';
 
 // Handle form submissions
 $message = "";
@@ -47,13 +36,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch sales history
-$sales_history_stmt = $pdo->query("
+// Get filter parameters
+$startDate = isset($_GET['start_date']) && $_GET['start_date'] !== '' ? $_GET['start_date'] : null;
+$endDate = isset($_GET['end_date']) && $_GET['end_date'] !== '' ? $_GET['end_date'] : null;
+$filterCustomer = isset($_GET['customer_id']) && $_GET['customer_id'] !== '' ? (int)$_GET['customer_id'] : null;
+
+// Build query with filters
+$whereConditions = [];
+$params = [];
+
+if ($startDate) {
+    $whereConditions[] = "s.sale_date >= :start_date";
+    $params[':start_date'] = $startDate . ' 00:00:00';
+}
+if ($endDate) {
+    $whereConditions[] = "s.sale_date <= :end_date";
+    $params[':end_date'] = $endDate . ' 23:59:59';
+}
+if ($filterCustomer) {
+    $whereConditions[] = "s.cid = :customer_id";
+    $params[':customer_id'] = $filterCustomer;
+}
+
+$whereClause = count($whereConditions) > 0 ? (' WHERE ' . implode(' AND ', $whereConditions)) : '';
+
+// Fetch sales history with filters
+$sql = "
     SELECT 
         s.sid,
         s.sale_date,
         s.total_amount,
         c.name as customer_name,
+        c.cid,
         GROUP_CONCAT(
             CONCAT(p.name, ' (Qty: ', si.quantity, ', Price: $', si.total_price, ')')
             SEPARATOR ', '
@@ -62,107 +76,121 @@ $sales_history_stmt = $pdo->query("
     JOIN customers c ON s.cid = c.cid
     JOIN sale_items si ON s.sid = si.sid
     JOIN products p ON si.pid = p.pid
-    GROUP BY s.sid, s.sale_date, s.total_amount, c.name
+    $whereClause
+    GROUP BY s.sid, s.sale_date, s.total_amount, c.name, c.cid
     ORDER BY s.sale_date DESC
-");
+";
+
+$sales_history_stmt = $pdo->prepare($sql);
+foreach ($params as $key => $value) {
+    $sales_history_stmt->bindValue($key, $value);
+}
+$sales_history_stmt->execute();
 $sales_history = $sales_history_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch all customers for filter dropdown
+$customers_stmt = $pdo->query("SELECT cid, name FROM customers ORDER BY name");
+$all_customers = $customers_stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+<?php
+$pageTitle = "Sales History - POS System";
+$basePath = '../';
+include '../includes/header.php';
+?>
+<?php include '../includes/navbar.php'; ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales History - POS System</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<style>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #E6EBE0;
-            color: #E6EBE0;
-            line-height: 1.6;
-        }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+    .header {
+        background-color: #A3C4F3;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
-        .header {
-            background-color: #A3C4F3;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+    .header h1 {
+        color: #E6EBE0;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
 
-        .header h1 {
-            color: #E6EBE0;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
+    .header p {
+        color: #E6EBE0;
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
 
-        .header p {
-            color: #E6EBE0;
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
+    .filters-section {
+        background-color: #A3C4F3;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
-        .navigation {
-            background-color: #A3C4F3;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+    .filters-section h3 {
+        color: #E6EBE0;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+    }
 
-        .nav-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
+    .filters-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
 
-        .nav-link {
-            background-color: #85a0c7;
-            color: #E6EBE0;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 
-        .nav-link:hover {
-            background-color: #6d8bb3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
+    .filter-group label {
+        color: #E6EBE0;
+        font-weight: 600;
+        font-size: 14px;
+    }
 
-        .nav-link.active {
-            background-color: #4CAF50;
-        }
+    .filter-group input,
+    .filter-group select {
+        padding: 10px 12px;
+        border: none;
+        border-radius: 5px;
+        background-color: rgba(255, 255, 255, 0.9);
+        color: #333;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
 
-        .nav-link.active:hover {
-            background-color: #45a049;
-        }
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        background-color: white;
+        box-shadow: 0 0 10px rgba(163, 196, 243, 0.5);
+    }
 
-        .history-container {
-            background-color: #A3C4F3;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+    .filter-buttons {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+
+    .history-container {
+        background-color: #A3C4F3;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
         .history-container h2 {
             color: #E6EBE0;
@@ -194,15 +222,22 @@ $sales_history = $sales_history_stmt->fetchAll(PDO::FETCH_ASSOC);
             border-bottom: 2px solid #85a0c7;
         }
 
+        .invoice-code {
+            background-color: #85a0c7;
+            color: #E6EBE0;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-right: 10px;
+            display: inline-block;
+        }
+
         .sale-id {
             font-weight: bold;
             color: #85a0c7;
             font-size: 1.2rem;
-        }
-
-        .sale-date {
-            color: #666;
-            font-size: 0.9rem;
         }
 
         .customer-name {
@@ -381,32 +416,14 @@ $sales_history = $sales_history_stmt->fetchAll(PDO::FETCH_ASSOC);
             .stats-container {
                 grid-template-columns: 1fr;
             }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Sales History</h1>
-            <p>View all sales transactions and customer purchases</p>
-        </div>
+    }
+</style>
 
-        <div class="navigation">
-            <div class="nav-links">
-                <a href="../index.php" class="nav-link">
-                    🏠 Home
-                </a>
-                <a href="../customer/customer.php" class="nav-link">
-                    👥 Customers
-                </a>
-                <a href="sale.php" class="nav-link active">
-                    🛒 Sales History
-                </a>
-                <a href="../reporting/reporting.php" class="nav-link">
-                    📊 Reporting
-                </a>
-            </div>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1>Sales History</h1>
+        <p>View all sales transactions and customer purchases</p>
+    </div>
 
         <?php if ($message): ?>
             <div class="message <?php echo $messageType; ?>">
@@ -414,15 +431,33 @@ $sales_history = $sales_history_stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         <?php endif; ?>
 
-        <!-- Clear History Section -->
-        <div class="clear-history-section">
-            <h3>🗑️ Clear Sales History</h3>
-            <p>This action will permanently delete all sales records and cannot be undone.</p>
-            <form method="POST" onsubmit="return confirmClearHistory()">
-                <input type="hidden" name="action" value="clear_history">
-                <button type="submit" class="btn btn-danger">
-                    🗑️ Clear All Sales History
-                </button>
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <h3>🔍 Filter Sales</h3>
+            <form method="GET" class="filters-form">
+                <div class="filter-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" value="<?php echo htmlspecialchars($startDate ?? ''); ?>">
+                </div>
+                <div class="filter-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" id="end_date" name="end_date" value="<?php echo htmlspecialchars($endDate ?? ''); ?>">
+                </div>
+                <div class="filter-group">
+                    <label for="customer_id">Customer</label>
+                    <select id="customer_id" name="customer_id">
+                        <option value="">All Customers</option>
+                        <?php foreach ($all_customers as $customer): ?>
+                            <option value="<?php echo $customer['cid']; ?>" <?php echo ($filterCustomer == $customer['cid']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($customer['name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="filter-buttons">
+                    <button type="submit" class="btn">Apply Filters</button>
+                    <a href="sale.php" class="btn btn-secondary">Reset</a>
+                </div>
             </form>
         </div>
 
@@ -452,6 +487,7 @@ $sales_history = $sales_history_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="history-item">
                         <div class="history-header">
                             <div>
+                                <span class="invoice-code">INV-<?php echo str_pad($sale['sid'], 6, '0', STR_PAD_LEFT); ?></span>
                                 <span class="sale-id">Sale #<?php echo $sale['sid']; ?></span>
                                 <span class="customer-name"> - <?php echo htmlspecialchars($sale['customer_name']); ?></span>
                             </div>
@@ -473,6 +509,18 @@ $sales_history = $sales_history_stmt->fetchAll(PDO::FETCH_ASSOC);
                     Sales will appear here once they are recorded through the system.</p>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <!-- Clear History Section -->
+        <div class="clear-history-section">
+            <h3>🗑️ Clear Sales History</h3>
+            <p>This action will permanently delete all sales records and cannot be undone.</p>
+            <form method="POST" onsubmit="return confirmClearHistory()">
+                <input type="hidden" name="action" value="clear_history">
+                <button type="submit" class="btn btn-danger">
+                    🗑️ Clear All Sales History
+                </button>
+            </form>
         </div>
     </div>
 
@@ -538,5 +586,6 @@ $sales_history = $sales_history_stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         });
     </script>
-</body>
-</html>
+</div>
+
+<?php include '../includes/footer.php'; ?>

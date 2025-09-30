@@ -18,39 +18,49 @@
         setTimeout(() => n.remove(), 3000);
     }
 
+    // Detect base path for API calls
+    const basePath = window.location.pathname.includes('/stock/') ? '../' : '';
+    
     const api = {
         async list(q = '', sort = 'name') {
-            const res = await fetch(`utility/products_api.php?action=list&q=${encodeURIComponent(q)}&sort=${encodeURIComponent(sort)}`);
+            const res = await fetch(`${basePath}utility/products_api.php?action=list&q=${encodeURIComponent(q)}&sort=${encodeURIComponent(sort)}`);
             return res.json();
         },
         async create(data) {
-            const res = await fetch('utility/products_api.php?action=create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            const res = await fetch(`${basePath}utility/products_api.php?action=create`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
             return res.json();
         },
         async update(id, data) {
-            const res = await fetch(`utility/products_api.php?action=update&id=${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            const res = await fetch(`${basePath}utility/products_api.php?action=update&id=${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
             return res.json();
         },
         async adjust(id, delta) {
-            const res = await fetch(`utility/products_api.php?action=adjust&id=${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ delta }) });
+            const res = await fetch(`${basePath}utility/products_api.php?action=adjust&id=${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ delta }) });
             return res.json();
         },
         async remove(id) {
-            const res = await fetch(`utility/products_api.php?action=delete&id=${id}`, { method: 'DELETE' });
+            const res = await fetch(`${basePath}utility/products_api.php?action=delete&id=${id}`, { method: 'DELETE' });
             return res.json();
         }
     };
 
-    const state = { items: [], sort: 'name', q: '', loading: false };
+    const state = { items: [], sort: 'name', q: '', loading: false, page: 1, perPage: 7 };
 
     function renderRows(items) {
         const tbody = $('#productsTbody');
         if (!items.length) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px;">No products</td></tr>';
+            renderPagination(0);
             return;
         }
+        
+        // Pagination
+        const start = (state.page - 1) * state.perPage;
+        const end = start + state.perPage;
+        const pageItems = items.slice(start, end);
+        
         tbody.innerHTML = '';
-        for (const it of items) {
+        for (const it of pageItems) {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><button class="link-btn" data-edit="${it.pid}" aria-label="Edit ${it.name}">${it.name}</button></td>
@@ -69,6 +79,41 @@
                 </td>`;
             tbody.appendChild(tr);
         }
+        
+        renderPagination(items.length);
+    }
+    
+    function renderPagination(totalItems) {
+        const paginationEl = $('#pagination');
+        if (!paginationEl) return;
+        
+        const totalPages = Math.ceil(totalItems / state.perPage);
+        
+        if (totalPages <= 1) {
+            paginationEl.innerHTML = '';
+            return;
+        }
+        
+        let html = '<div class="pagination-info">Page ' + state.page + ' of ' + totalPages + ' (' + totalItems + ' items)</div>';
+        html += '<div class="pagination-buttons">';
+        
+        // Previous button
+        html += '<button class="pagination-btn" data-page="' + (state.page - 1) + '" ' + (state.page === 1 ? 'disabled' : '') + '>← Prev</button>';
+        
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= state.page - 2 && i <= state.page + 2)) {
+                html += '<button class="pagination-btn ' + (i === state.page ? 'active' : '') + '" data-page="' + i + '">' + i + '</button>';
+            } else if (i === state.page - 3 || i === state.page + 3) {
+                html += '<span class="pagination-ellipsis">...</span>';
+            }
+        }
+        
+        // Next button
+        html += '<button class="pagination-btn" data-page="' + (state.page + 1) + '" ' + (state.page === totalPages ? 'disabled' : '') + '>Next →</button>';
+        html += '</div>';
+        
+        paginationEl.innerHTML = html;
     }
 
     async function load() {
@@ -76,6 +121,7 @@
         const { success, items } = await api.list(state.q, state.sort);
         state.loading = false;
         state.items = items || [];
+        state.page = 1; // Reset to first page on new load
         renderRows(state.items);
     }
 
@@ -144,6 +190,18 @@
         $('#addProductBtn').addEventListener('click', () => { setForm({}); clearErrors(); $('#name').focus(); });
         $('#searchInputStock').addEventListener('input', (e) => { state.q = e.target.value; load(); });
         $('#sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; load(); });
+        
+        // Pagination events
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.pagination-btn');
+            if (btn && !btn.disabled) {
+                const page = Number(btn.dataset.page);
+                if (page > 0) {
+                    state.page = page;
+                    renderRows(state.items);
+                }
+            }
+        });
 
         $('#stock').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
         $$('.qty-btn').forEach(btn => btn.addEventListener('click', (e) => {

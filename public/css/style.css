@@ -27,11 +27,11 @@ body {
 }
 
 .nav-container {
-    max-width: 1400px;
-    margin: 0 auto;
+    /* max-width: 1400px; */
+    /* margin: 0 auto; */
     padding: 0 2rem;
     display: flex;
-    justify-content: space-between;
+    /* justify-content: space-between; */
     align-items: center;
 }
 
@@ -51,6 +51,7 @@ body {
 .nav-menu {
     display: flex;
     gap: 2rem;
+    margin-left: 65px;
 }
 
 .nav-link {
@@ -58,7 +59,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     text-decoration: none;
-    color: #E6EBE0;
+    color: #2c3e50;
     padding: 0.5rem 1rem;
     border-radius: 8px;
     transition: all 0.3s ease;
@@ -77,6 +78,7 @@ body {
     gap: 0.5rem;
     color: #E6EBE0;
     font-weight: 500;
+    margin-left: 65px;
 }
 
 .nav-customer i {

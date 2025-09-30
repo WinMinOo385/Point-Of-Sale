@@ -1,6 +1,9 @@
 <?php
-require_once __DIR__ . '/includes/header.php';
-require_once __DIR__ . '/includes/navbar.php';
+$pageTitle = "Product Stock - POS System";
+$basePath = '../';
+include '../includes/db_connection.php';
+include '../includes/header.php';
+include '../includes/navbar.php';
 ?>
 
 <main class="stock-app">
@@ -35,9 +38,11 @@ require_once __DIR__ . '/includes/navbar.php';
                     </tbody>
                 </table>
             </div>
+            <div id="pagination" class="pagination-container"></div>
         </section>
 
         <aside class="stock-form-panel product-section" aria-label="Product details">
+            <h2>Product Details</h2>
             <form id="productForm" novalidate>
                 <input type="hidden" id="productId" />
                 <div class="form-group">
@@ -99,9 +104,9 @@ require_once __DIR__ . '/includes/navbar.php';
     </div>
 </main>
 
-<script src="public/js/stock.js" defer></script>
-<link rel="stylesheet" href="public/css/stock.css" />
+<script src="../public/js/stock.js" defer></script>
+<link rel="stylesheet" href="../public/css/stock.css" />
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>
 
 
